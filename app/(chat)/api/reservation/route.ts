@@ -1,5 +1,5 @@
-import { auth } from "@/app/(auth)/auth";
-import { getReservationById, updateReservation } from "@/db/queries";
+import { auth } from "@/app/auth-stub";
+import { getReservationById, updateReservation } from "@/db/queries-stub";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

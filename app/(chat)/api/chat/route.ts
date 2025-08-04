@@ -8,25 +8,26 @@ import {
   generateSampleFlightStatus,
   generateSampleSeatSelection,
 } from "@/ai/actions";
-import { auth } from "@/app/(auth)/auth";
+import { auth } from "@/app/auth-stub";
 import {
   createReservation,
   deleteChatById,
   getChatById,
   getReservationById,
   saveChat,
-} from "@/db/queries";
+} from "@/db/queries-stub";
 import { generateUUID } from "@/lib/utils";
 
 export async function POST(request: Request) {
-  const { id, messages }: { id: string; messages: Array<Message> } =
-    await request.json();
+  try {
+    const { id, messages }: { id: string; messages: Array<Message> } =
+      await request.json();
 
-  const session = await auth();
+    const session = await auth();
 
-  if (!session) {
-    return new Response("Unauthorized", { status: 401 });
-  }
+    if (!session) {
+      return new Response("Unauthorized", { status: 401 });
+    }
 
   const coreMessages = convertToCoreMessages(messages).filter(
     (message) => message.content.length > 0,
@@ -234,6 +235,17 @@ export async function POST(request: Request) {
   });
 
   return result.toDataStreamResponse({});
+  } catch (error: any) {
+    console.error('Chat API Error:', error);
+    return new Response(JSON.stringify({ 
+      error: 'Internal server error', 
+      message: error.message || 'Unknown error',
+      stack: error.stack 
+    }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
 }
 
 export async function DELETE(request: Request) {

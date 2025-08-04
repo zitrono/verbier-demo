@@ -1,7 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 
-import { auth, signOut } from "@/app/(auth)/auth";
+import { auth, signOut } from "@/app/auth-stub";
 
 import { History } from "./history";
 import { SlashIcon } from "./icons";

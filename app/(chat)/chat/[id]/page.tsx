@@ -1,9 +1,9 @@
 import { CoreMessage } from "ai";
 import { notFound } from "next/navigation";
 
-import { auth } from "@/app/(auth)/auth";
+import { auth } from "@/app/auth-stub";
 import { Chat as PreviewChat } from "@/components/custom/chat";
-import { getChatById } from "@/db/queries";
+import { getChatById } from "@/db/queries-stub";
 import { Chat } from "@/db/schema";
 import { convertToUIMessages } from "@/lib/utils";
 
