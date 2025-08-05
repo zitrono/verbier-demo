@@ -20,11 +20,13 @@ export function Chat({
   const { messages = [], handleSubmit, input, setInput, append, isLoading, stop } =
     useChat({
       id,
+      api: '/api/chat',
       body: { id },
-      initialMessages,
-      maxSteps: 10,
+      initialMessages: initialMessages || [],
       onFinish: () => {
-        window.history.replaceState({}, "", `/chat/${id}`);
+        if (typeof window !== 'undefined') {
+          window.history.replaceState({}, "", `/chat/${id}`);
+        }
       },
     });
 
@@ -48,8 +50,8 @@ export function Chat({
               chatId={id}
               role={message.role}
               content={message.content}
-              attachments={message.experimental_attachments}
-              toolInvocations={message.toolInvocations}
+              attachments={message.experimental_attachments || []}
+              toolInvocations={message.toolInvocations || []}
             />
           ))}
 

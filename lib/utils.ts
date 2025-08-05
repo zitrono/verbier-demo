@@ -63,9 +63,11 @@ function addToolMessageToChat({
       return {
         ...message,
         toolInvocations: message.toolInvocations.map((toolInvocation) => {
-          const toolResult = toolMessage.content.find(
-            (tool) => tool.toolCallId === toolInvocation.toolCallId,
-          );
+          const toolResult = toolMessage.content && Array.isArray(toolMessage.content) 
+            ? toolMessage.content.find(
+                (tool) => tool.toolCallId === toolInvocation.toolCallId,
+              )
+            : undefined;
 
           if (toolResult) {
             return {
@@ -87,7 +89,13 @@ function addToolMessageToChat({
 export function convertToUIMessages(
   messages: Array<CoreMessage>,
 ): Array<Message> {
+  if (!messages || !Array.isArray(messages)) {
+    return [];
+  }
+  
   return messages.reduce((chatMessages: Array<Message>, message) => {
+    if (!message) return chatMessages;
+    
     if (message.role === "tool") {
       return addToolMessageToChat({
         toolMessage: message as CoreToolMessage,
@@ -100,10 +108,10 @@ export function convertToUIMessages(
 
     if (typeof message.content === "string") {
       textContent = message.content;
-    } else if (Array.isArray(message.content)) {
+    } else if (message.content && Array.isArray(message.content)) {
       for (const content of message.content) {
         if (content.type === "text") {
-          textContent += content.text;
+          textContent += content.text || "";
         } else if (content.type === "tool-call") {
           toolInvocations.push({
             state: "call",
@@ -117,7 +125,7 @@ export function convertToUIMessages(
 
     chatMessages.push({
       id: generateId(),
-      role: message.role,
+      role: message.role || "user",
       content: textContent,
       toolInvocations,
     });
@@ -127,10 +135,14 @@ export function convertToUIMessages(
 }
 
 export function getTitleFromChat(chat: Chat) {
+  if (!chat || !chat.messages) {
+    return "Untitled";
+  }
+  
   const messages = convertToUIMessages(chat.messages as Array<CoreMessage>);
-  const firstMessage = messages[0];
+  const firstMessage = messages && messages.length > 0 ? messages[0] : null;
 
-  if (!firstMessage) {
+  if (!firstMessage || !firstMessage.content) {
     return "Untitled";
   }
 
