@@ -2,7 +2,7 @@
 
 import { Attachment, Message, CreateMessage } from "ai";
 import { useChat } from "@ai-sdk/react";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback } from "react";
 
 import { Message as PreviewMessage } from "@/components/custom/message";
 import { useScrollToBottom } from "@/components/custom/use-scroll-to-bottom";
@@ -37,19 +37,6 @@ export function Chat({
   // Manage input state locally since new useChat doesn't provide it
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
-
-  // Create a stable reference to setInput to prevent closure issues
-  const setInputRef = useRef(setInput);
-  setInputRef.current = setInput;
-
-  // Create a stable setInput function that uses the ref
-  const stableSetInput = useCallback((value: string) => {
-    if (typeof setInputRef.current === 'function') {
-      setInputRef.current(value);
-    } else {
-      console.error('setInput is not available:', setInputRef.current);
-    }
-  }, []);
 
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
@@ -112,7 +99,7 @@ export function Chat({
         <form className="flex flex-row gap-2 relative items-end w-full md:max-w-[500px] max-w-[calc(100dvw-32px)] px-4 md:px-0">
           <MultimodalInput
             input={input}
-            setInput={stableSetInput}
+            setInput={setInput}
             handleSubmit={handleSubmit}
             isLoading={isLoading}
             stop={stop}
