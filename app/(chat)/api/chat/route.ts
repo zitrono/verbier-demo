@@ -1,4 +1,4 @@
-import { convertToCoreMessages, Message, streamText } from "ai";
+import { Message, streamText } from "ai";
 import { z } from "zod";
 
 import { geminiProModel } from "@/ai";
@@ -29,33 +29,17 @@ export async function POST(request: Request) {
       return new Response("Unauthorized", { status: 401 });
     }
 
-  const coreMessages = convertToCoreMessages(messages).filter(
-    (message) => message.content.length > 0,
+  // In AI SDK 5.x, messages are passed directly without conversion
+  const filteredMessages = messages.filter(
+    (message: Message) => message.content && message.content.length > 0,
   );
 
   const result = await streamText({
     model: geminiProModel,
-    system: `\n
-        - you help users book flights!
-        - keep your responses limited to a sentence.
-        - DO NOT output lists.
-        - after every tool call, pretend you're showing the result to the user and keep your response limited to a phrase.
-        - today's date is ${new Date().toLocaleDateString()}.
-        - ask follow up questions to nudge user into the optimal flow
-        - ask for any details you don't know, like name of passenger, etc.'
-        - C and D are aisle seats, A and F are window seats, B and E are middle seats
-        - assume the most popular airports for the origin and destination
-        - here's the optimal flow
-          - search for flights
-          - choose flight
-          - select seats
-          - create reservation (ask user whether to proceed with payment or change reservation)
-          - authorize payment (requires user consent, wait for user to finish payment and let you know when done)
-          - display boarding pass (DO NOT display boarding pass without verifying payment)
-        '
-      `,
-    messages: coreMessages,
-    tools: {
+    system: `You are a helpful assistant that responds to user messages.`,
+    messages: filteredMessages,
+    // Temporarily disable tools to test basic chat functionality
+    /*tools: {
       getWeather: {
         description: "Get the current weather at a location",
         parameters: z.object({
@@ -214,13 +198,13 @@ export async function POST(request: Request) {
           return boardingPass;
         },
       },
-    },
+    },*/
     onFinish: async ({ responseMessages }) => {
       if (session.user && session.user.id) {
         try {
           await saveChat({
             id,
-            messages: [...coreMessages, ...responseMessages],
+            messages: [...filteredMessages, ...responseMessages],
             userId: session.user.id,
           });
         } catch (error) {
@@ -234,7 +218,8 @@ export async function POST(request: Request) {
     },
   });
 
-  return result.toDataStreamResponse({});
+  // In AI SDK 5.x, use toTextStreamResponse instead of toDataStreamResponse
+  return result.toTextStreamResponse();
   } catch (error: any) {
     console.error('Chat API Error:', error);
     return new Response(JSON.stringify({ 
