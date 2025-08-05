@@ -1,8 +1,8 @@
 "use client";
 
-import { Attachment, Message } from "ai";
+import { Attachment, Message, CreateMessage } from "ai";
 import { useChat } from "@ai-sdk/react";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 
 import { Message as PreviewMessage } from "@/components/custom/message";
 import { useScrollToBottom } from "@/components/custom/use-scroll-to-bottom";
@@ -17,23 +17,65 @@ export function Chat({
   id: string;
   initialMessages: Array<Message>;
 }) {
-  const { messages = [], handleSubmit, input, setInput, append, isLoading, stop } =
-    useChat({
-      id,
-      api: '/api/chat',
-      body: { id },
-      initialMessages: initialMessages || [],
-      onFinish: () => {
-        if (typeof window !== 'undefined') {
-          window.history.replaceState({}, "", `/chat/${id}`);
-        }
-      },
-    });
+  const chatHelpers = useChat({
+    id,
+    api: '/api/chat',
+    body: { id },
+    initialMessages: initialMessages || [],
+    onFinish: () => {
+      if (typeof window !== 'undefined') {
+        window.history.replaceState({}, "", `/chat/${id}`);
+      }
+    },
+  });
+
+  // Debug what useChat returns
+  console.log('useChat returned:', Object.keys(chatHelpers));
+  
+  const { 
+    messages = [], 
+    sendMessage,
+    stop,
+    status
+  } = chatHelpers;
+
+  // Manage input state locally since new useChat doesn't provide it
+  const [input, setInput] = useState("");
+  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
 
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
-  const [attachments, setAttachments] = useState<Array<Attachment>>([]);
+  const isLoading = status === 'loading';
+  
+  // Create handleSubmit that uses sendMessage
+  const handleSubmit = useCallback((event?: { preventDefault?: () => void }) => {
+    if (event?.preventDefault) {
+      event.preventDefault();
+    }
+    
+    if (input.trim() && sendMessage) {
+      sendMessage({
+        role: 'user',
+        content: input,
+        experimental_attachments: attachments,
+      });
+      setInput("");
+      setAttachments([]);
+    }
+  }, [input, sendMessage, attachments]);
+
+  // Create handleInputChange for the input
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInput(e.target.value);
+  }, []);
+
+  // Create append function for suggested actions
+  const append = useCallback(async (message: Message | CreateMessage) => {
+    if (sendMessage) {
+      sendMessage(message);
+    }
+  }, [sendMessage]);
 
   return (
     <div className="flex flex-row justify-center pb-4 md:pb-8 h-dvh bg-background">
@@ -68,6 +110,7 @@ export function Chat({
           <MultimodalInput
             input={input || ''}
             setInput={setInput}
+            handleInputChange={handleInputChange}
             handleSubmit={handleSubmit}
             isLoading={isLoading || false}
             stop={stop}
