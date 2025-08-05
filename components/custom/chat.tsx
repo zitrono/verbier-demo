@@ -38,6 +38,9 @@ export function Chat({
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
 
+  // Debug setInput function
+  console.log('setInput type:', typeof setInput, 'setInput:', setInput);
+
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 

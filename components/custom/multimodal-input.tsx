@@ -78,6 +78,10 @@ export function MultimodalInput({
   };
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    if (typeof setInput !== 'function') {
+      console.error('setInput is not a function:', setInput);
+      return;
+    }
     setInput(event.target.value);
     adjustHeight();
   };
