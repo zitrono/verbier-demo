@@ -44,16 +44,19 @@ export function Chat({
         >
           {messages && messages.length === 0 && <Overview />}
 
-          {messages && messages.map((message) => (
-            <PreviewMessage
-              key={message.id}
-              chatId={id}
-              role={message.role}
-              content={message.content}
-              attachments={message.experimental_attachments || []}
-              toolInvocations={message.toolInvocations || []}
-            />
-          ))}
+          {messages && messages.map((message) => {
+            if (!message) return null;
+            return (
+              <PreviewMessage
+                key={message.id || Math.random().toString()}
+                chatId={id}
+                role={message.role || 'user'}
+                content={message.content || ''}
+                attachments={message?.experimental_attachments || []}
+                toolInvocations={message?.toolInvocations || []}
+              />
+            );
+          })}
 
           <div
             ref={messagesEndRef}
@@ -61,16 +64,16 @@ export function Chat({
           />
         </div>
 
-        <form className="flex flex-row gap-2 relative items-end w-full md:max-w-[500px] max-w-[calc(100dvw-32px) px-4 md:px-0">
+        <form className="flex flex-row gap-2 relative items-end w-full md:max-w-[500px] max-w-[calc(100dvw-32px)] px-4 md:px-0">
           <MultimodalInput
-            input={input}
+            input={input || ''}
             setInput={setInput}
             handleSubmit={handleSubmit}
-            isLoading={isLoading}
+            isLoading={isLoading || false}
             stop={stop}
-            attachments={attachments}
+            attachments={attachments || []}
             setAttachments={setAttachments}
-            messages={messages}
+            messages={messages || []}
             append={append}
           />
         </form>
