@@ -1,7 +1,4 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { experimental_wrapLanguageModel as wrapLanguageModel } from "ai";
-
-import { customMiddleware } from "./custom-middleware";
 
 // Create Google AI instance with API key
 const google = createGoogleGenerativeAI({

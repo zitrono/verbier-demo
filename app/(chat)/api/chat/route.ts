@@ -2,6 +2,10 @@ import { Message, streamText } from "ai";
 import { z } from "zod";
 
 import { geminiProModel } from "@/ai";
+
+// Force dynamic rendering for this route
+export const dynamic = 'force-dynamic';
+export const maxDuration = 30; // Maximum allowed duration for streaming
 import {
   generateReservationPrice,
   generateSampleFlightSearchResults,
@@ -18,10 +22,14 @@ import {
 } from "@/db/queries-stub";
 import { generateUUID } from "@/lib/utils";
 
+interface ChatRequest {
+  id: string;
+  messages: Array<Message>;
+}
+
 export async function POST(request: Request) {
   try {
-    const { id, messages }: { id: string; messages: Array<Message> } =
-      await request.json();
+    const { id, messages }: ChatRequest = await request.json();
 
     const session = await auth();
 
@@ -222,10 +230,14 @@ export async function POST(request: Request) {
   return result.toTextStreamResponse();
   } catch (error: any) {
     console.error('Chat API Error:', error);
+    
+    // Return more specific error information in development
+    const isDevelopment = process.env.NODE_ENV === 'development';
+    
     return new Response(JSON.stringify({ 
       error: 'Internal server error', 
       message: error.message || 'Unknown error',
-      stack: error.stack 
+      ...(isDevelopment && { stack: error.stack })
     }), {
       status: 500,
       headers: { 'Content-Type': 'application/json' }
