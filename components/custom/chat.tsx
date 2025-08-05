@@ -17,7 +17,7 @@ export function Chat({
   id: string;
   initialMessages: Array<Message>;
 }) {
-  const { messages, handleSubmit, input, setInput, append, isLoading, stop } =
+  const { messages = [], handleSubmit, input, setInput, append, isLoading, stop } =
     useChat({
       id,
       body: { id },
@@ -40,9 +40,9 @@ export function Chat({
           ref={messagesContainerRef}
           className="flex flex-col gap-4 h-full w-dvw items-center overflow-y-scroll"
         >
-          {messages.length === 0 && <Overview />}
+          {messages && messages.length === 0 && <Overview />}
 
-          {messages.map((message) => (
+          {messages && messages.map((message) => (
             <PreviewMessage
               key={message.id}
               chatId={id}
