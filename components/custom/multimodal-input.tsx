@@ -35,7 +35,6 @@ const suggestedActions = [
 export function MultimodalInput({
   input,
   setInput,
-  handleInputChange,
   isLoading,
   stop,
   attachments,
@@ -45,8 +44,7 @@ export function MultimodalInput({
   handleSubmit,
 }: {
   input: string;
-  setInput?: (value: string) => void;
-  handleInputChange?: (event: ChangeEvent<HTMLTextAreaElement>) => void;
+  setInput: (value: string) => void;
   isLoading: boolean;
   stop: () => void;
   attachments: Array<Attachment>;
@@ -80,11 +78,7 @@ export function MultimodalInput({
   };
 
   const handleInput = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
-    if (handleInputChange) {
-      handleInputChange(event);
-    } else if (setInput) {
-      setInput(event.target.value);
-    }
+    setInput(event.target.value);
     adjustHeight();
   };
 

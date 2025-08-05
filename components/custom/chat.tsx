@@ -17,7 +17,12 @@ export function Chat({
   id: string;
   initialMessages: Array<Message>;
 }) {
-  const chatHelpers = useChat({
+  const { 
+    messages = [], 
+    sendMessage,
+    stop,
+    status
+  } = useChat({
     id,
     api: '/api/chat',
     body: { id },
@@ -29,16 +34,6 @@ export function Chat({
     },
   });
 
-  // Debug what useChat returns
-  console.log('useChat returned:', Object.keys(chatHelpers));
-  
-  const { 
-    messages = [], 
-    sendMessage,
-    stop,
-    status
-  } = chatHelpers;
-
   // Manage input state locally since new useChat doesn't provide it
   const [input, setInput] = useState("");
   const [attachments, setAttachments] = useState<Array<Attachment>>([]);
@@ -46,7 +41,7 @@ export function Chat({
   const [messagesContainerRef, messagesEndRef] =
     useScrollToBottom<HTMLDivElement>();
 
-  const isLoading = status === 'loading';
+  const isLoading = status === 'streaming' || status === 'submitted';
   
   // Create handleSubmit that uses sendMessage
   const handleSubmit = useCallback((event?: { preventDefault?: () => void }) => {
@@ -56,8 +51,7 @@ export function Chat({
     
     if (input.trim() && sendMessage) {
       sendMessage({
-        role: 'user',
-        content: input,
+        text: input,
         experimental_attachments: attachments,
       });
       setInput("");
@@ -65,15 +59,11 @@ export function Chat({
     }
   }, [input, sendMessage, attachments]);
 
-  // Create handleInputChange for the input
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInput(e.target.value);
-  }, []);
-
   // Create append function for suggested actions
   const append = useCallback(async (message: Message | CreateMessage) => {
     if (sendMessage) {
-      sendMessage(message);
+      const text = typeof message.content === 'string' ? message.content : '';
+      sendMessage({ text });
     }
   }, [sendMessage]);
 
@@ -108,15 +98,14 @@ export function Chat({
 
         <form className="flex flex-row gap-2 relative items-end w-full md:max-w-[500px] max-w-[calc(100dvw-32px)] px-4 md:px-0">
           <MultimodalInput
-            input={input || ''}
+            input={input}
             setInput={setInput}
-            handleInputChange={handleInputChange}
             handleSubmit={handleSubmit}
-            isLoading={isLoading || false}
+            isLoading={isLoading}
             stop={stop}
-            attachments={attachments || []}
+            attachments={attachments}
             setAttachments={setAttachments}
-            messages={messages || []}
+            messages={messages}
             append={append}
           />
         </form>
